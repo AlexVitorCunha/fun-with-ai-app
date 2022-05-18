@@ -15,10 +15,10 @@ class FillableForm extends Component{
 
     onFormSubmit = e => {
         e.preventDefault()
-
         const formData = new FormData(e.target),
         formDataObj = Object.fromEntries(formData.entries())
         console.log(formDataObj.prompt)
+
         let completePrompt;
         if(formDataObj.category === '0'){
             completePrompt = formDataObj.prompt
@@ -36,30 +36,36 @@ class FillableForm extends Component{
             completePrompt = "Write a poem about " + formDataObj.prompt 
         }
 
-        console.log(completePrompt)
-
-        const configuration = new Configuration({
-            apiKey: "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",
-          });
-          const openai = new OpenAIApi(configuration);
-          
-          openai.createCompletion("text-curie-001", {
+        const data = {
             prompt: completePrompt,
-            temperature: 0.7,
-            max_tokens: 256,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-          })
-          .then((response) => {
-              console.log(response.data.choices[0].text)
-            const newPromptsList = [formDataObj.prompt, ...this.state.prompts]
-            const newResponsesList = [response.data.choices[0].text, ...this.state.responses]
-            this.setState({
+            temperature: 0.5,
+            max_tokens: 64,
+            top_p: 1.0,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
+           };
+           
+           var obj = {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.REACT_APP_API_KEY}`,
+            },
+            body: JSON.stringify(data),
+           }
+           console.log(obj)
+           fetch("https://api.openai.com/v1/engines/text-curie-001/completions", obj)
+           .then((response) => {
+               return response.json();
+
+            }).then((data1) => {
+                const newPromptsList = [formDataObj.prompt, ...this.state.prompts]
+                const newResponsesList = [data1.choices[0].text, ...this.state.responses]
+                this.setState({
                 prompts : newPromptsList,
                 responses : newResponsesList
-            })
-          });
+                })
+            });
     }
     render(){
         return(
